@@ -41,16 +41,7 @@ class ArticleController extends AbstractController
         $this->entityManager->persist($article);
         $this->entityManager->flush();
         
-        return new JsonResponse([
-            'status' => true,
-            'message' => [
-                'class' => 'ArticleController',
-                'method' => 'createArticle',
-                'content' => [
-                    'Create_Row' => $article->getId()
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Create_Row' => $article->getId()]]);
     }
 
     #[Route('/api/article/{id}', name: 'update_article', methods: ['PATCH'], requirements: ['id' => '\d+'])]
@@ -58,73 +49,49 @@ class ArticleController extends AbstractController
     public function updateArticle(ArticleUpdateIn $articleUpdateIn, $id): JsonResponse
     {
         $localArticle = $this->articleRepository->find($id);
+        if(!$localArticle) {
+            return $this->json(['status' => false, 'message' => ['Update_Row' => "Row_" . $id . "_not_found"]]);
+        }
         $article = $this->autoMapper->mapToObject($articleUpdateIn, $localArticle);
         $this->entityManager->flush();
 
-        return new JsonResponse([
-            'status' => true,
-            'message' => [
-                'class' => 'ArticleController', 
-                'method' => 'updateArticle', 
-                'content' => [
-                    'Update_Row' => $article->getId()
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Update_Row' => $article->getId()]]);
     }
 
     #[Route('/api/article/{id}', name: 'get_article_by_id', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function getArticleById($id): JsonResponse
     {
         $localArticle = $this->articleRepository->find($id);
+        if(!$localArticle) {
+            return $this->json(['status' => false, 'message' => ['Article' => "Row_" . $id . "_not_found"]]);
+        }
         $article = $this->autoMapper->map($localArticle, ArticleOut::class);
 
-        return new JsonResponse([
-            'status' => true,
-            'message' => [
-                'class' => 'ArticleController', 
-                'method' => 'getArticleById',
-                'content' => [
-                    'article' => $article
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Article' => $article]]);
     }
 
     #[Route('/api/article/list', name: 'get_article_list', methods: ['GET'])]
     public function getArticleList(): JsonResponse
     {
-        $localArticle = $this->articleRepository->findAll();
-        $article = $this->autoMapper->mapMultiple($localArticle, ArticleListOut::class);
+        $localArticles = $this->articleRepository->findAll();
+        if(!$localArticles) {
+            return $this->json(['status' => false, 'message' => ['Articles' => "Rows_not_found"]]);
+        }
+        $articles = $this->autoMapper->mapMultiple($localArticles, ArticleListOut::class);
 
-        return $this->json([
-            'status' => true,
-            'message' => [
-                'class' => 'ArticleController', 
-                'method' => 'getArticleList',
-                'content' => [
-                    'article' => $article
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Articles' => $articles]]);
     }
 
     #[Route('/api/article/{id}', name: 'delete_article', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function deleteArticle($id): JsonResponse
     {
         $localArticle = $this->articleRepository->find($id);
+        if(!$localArticle) {
+            return $this->json(['status' => false, 'message' => ['Delete_Row' => "Row_" . $id . "_not_found"]]);
+        }
         $this->entityManager->remove($localArticle);
         $this->entityManager->flush();
 
-        return new JsonResponse([
-            'status' => true,
-            'message' => [
-                'class' => 'ArticleController',
-                'method' => 'deleteArticle',
-                'content' => [
-                    'Delete_Row' => $id
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Delete_Row' => $id]]);
     }
 }

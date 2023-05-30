@@ -41,16 +41,7 @@ class CommentController extends AbstractController
         $this->entityManager->persist($comment);
         $this->entityManager->flush();
 
-        return $this->json([
-            'status' => true,
-            'message' => [
-                'class' => 'CommentController', 
-                'method' => 'createComment',
-                'content' => [
-                    'Create_Row' => $comment->getId()
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Create_Row' => $comment->getId()]]);
     }
 
     #[Route('/api/comment/{id}', name: 'update_comment', methods: ['PATCH'], requirements: ['id' => '\d+'])]
@@ -58,73 +49,49 @@ class CommentController extends AbstractController
     public function updateComment(CommentUpdateIn $commentUpdateIn, $id): JsonResponse
     {
         $localComment = $this->commentRepository->find($id);
+        if(!$localComment) {
+            return $this->json(['status' => false, 'message' => ['Update_Row' => "Row_" . $id . "_not_found"]]);
+        }
         $comment = $this->autoMapper->mapToObject($commentUpdateIn, $localComment);
         $this->entityManager->flush();
 
-        return $this->json([
-            'status' => true,
-            'message' => [
-                'class' => 'CommentController', 
-                'method' => 'updateComment', 
-                'content' => [
-                    'Update_Row' => $comment->getId()
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Update_Row' => $comment->getId()]]);
     }
 
     #[Route('/api/comment/{id}', name: 'get_comment_by_id', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function getCommentById($id): JsonResponse
     {
         $localComment = $this->commentRepository->find($id);
+        if(!$localComment) {
+            return $this->json(['status' => false, 'message' => ['Comment' => "Row_" . $id . "_not_found"]]);
+        }
         $comment = $this->autoMapper->map($localComment, CommentOut::class);
 
-        return $this->json([
-            'status' => true,
-            'message' => [
-                'class' => 'CommentController', 
-                'method' => 'getCommentById',
-                'content' => [
-                    'comment' => $comment
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Comment' => $comment]]);
     }
 
     #[Route('/api/comment/list', name: 'get_comment_list', methods: ['GET'])]
     public function getCommentList(): JsonResponse
     {
-        $localComment = $this->commentRepository->findAll();
-        $comment = $this->autoMapper->mapMultiple($localComment, CommentListOut::class);
+        $localComments = $this->commentRepository->findAll();
+        if(!$localComments) {
+            return $this->json(['status' => false, 'message' => ['Comments' => "Rows_not_found"]]);
+        }
+        $comments = $this->autoMapper->mapMultiple($localComments, CommentListOut::class);
 
-        return $this->json([
-            'status' => true,
-            'message' => [
-                'class' => 'CommentController', 
-                'method' => 'getCommentList',
-                'content' => [
-                    'comment' => $comment
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Comments' => $comments]]);
     }
 
     #[Route('/api/comment/{id}', name: 'delete_comment', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function deleteComment($id): JsonResponse
     {
         $localComment = $this->commentRepository->find($id);
+        if(!$localComment) {
+            return $this->json(['status' => false, 'message' => ['Delete_Row' => "Row_" . $id . "_not_found"]]);
+        }
         $this->entityManager->remove($localComment);
         $this->entityManager->flush();
         
-        return $this->json([
-            'status' => true,
-            'message' => [
-                'class' => 'CommentController',
-                'method' => 'deleteComment',
-                'content' => [
-                    'Delete_Row' => $id
-                ]
-            ]
-        ]);
+        return new JsonResponse(['status' => true, 'message' => ['Delete_Row' => $id]]);
     }
 }
